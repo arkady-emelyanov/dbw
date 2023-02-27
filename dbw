@@ -1,0 +1,192 @@
+#!/usr/bin/env python3
+import click
+from dotenv import load_dotenv
+from dltx.project import Project
+
+
+@click.group()
+def cli():
+    pass
+
+
+@click.command()
+@click.option('--use-cluster-id', default=None, help='Use existing cluster ID if possible')
+@click.option('--dlt-debug-mode', is_flag=True, show_default=True, default=False, help='Use debug mode for DLT')
+@click.option('--name-suffix', default=None, help="Name suffix to use")
+def info(
+        use_cluster_id: str,
+        dlt_debug_mode: bool,
+        name_suffix: str
+):
+    b = Project()
+    b.configure({
+        "use_cluster_id": use_cluster_id,
+        "use_name_suffix": name_suffix,
+    })
+    if dlt_debug_mode:
+        b.configure({"dlt_debug_mode": "1"})
+    b.load_workflows("./workflows")
+    b.info()
+
+
+@click.command()
+@click.argument('workflow_name')
+@click.option('--idempotency-token', default=None, help='Use idempotency token')
+@click.option('--use-cluster-id', default=None, help='Use existing cluster ID (if possible)')
+@click.option('--dlt-debug-mode', is_flag=True, show_default=True, default=False, help='Use debug mode for DLT')
+@click.option('--name-suffix', default=None, help="Name suffix to use")
+@click.pass_context
+def run(
+        ctx,
+        workflow_name: str,
+        idempotency_token: str,
+        use_cluster_id: str,
+        dlt_debug_mode: bool,
+        name_suffix: str
+):
+    b = ctx.invoke(
+        synch,
+        workflow_name=workflow_name,
+        use_cluster_id=use_cluster_id,
+        dlt_debug_mode=dlt_debug_mode,
+        name_suffix=name_suffix,
+    )
+    b.run_workflow_sync(workflow_name, idempotency_token)
+    return b
+
+
+@click.command()
+@click.argument('workflow_name')
+@click.option('--use-cluster-id', default=None, help='Use existing cluster ID if possible')
+@click.option('--dlt-debug-mode', is_flag=True, show_default=True, default=False, help='Use debug mode for DLT')
+@click.option('--name-suffix', default=None, help="Name suffix to use")
+def synch(
+        workflow_name: str,
+        use_cluster_id: str,
+        dlt_debug_mode: bool,
+        name_suffix: str
+):
+    b = Project()
+    b.configure({
+        "use_cluster_id": use_cluster_id,
+        "use_name_suffix": name_suffix,
+    })
+    if dlt_debug_mode:
+        b.configure({"dlt_debug_mode": "1"})
+    b.load_workflows("./workflows")
+    b.synch_workflow(workflow_name)
+    return b
+
+
+@click.command()
+@click.argument('workflow_name')
+@click.option('--use-cluster-id', default=None, help='Use existing cluster ID if possible')
+@click.option('--dlt-debug-mode', is_flag=True, show_default=True, default=False, help='Use debug mode for DLT')
+@click.option('--name-suffix', default=None, help="Name suffix to use")
+def delete(
+        workflow_name: str,
+        use_cluster_id: str,
+        dlt_debug_mode: bool,
+        name_suffix: str
+):
+    b = Project()
+    b.configure({
+        "use_cluster_id": use_cluster_id,
+        "use_name_suffix": name_suffix,
+    })
+    if dlt_debug_mode:
+        b.configure({"dlt_debug_mode": "1"})
+    b.load_workflows("./workflows")
+    b.delete_workflow(workflow_name)
+    return b
+
+
+@click.command()
+@click.argument('workflow_name')
+@click.option('--use-cluster-id', default=None, help='Use existing cluster ID if possible')
+@click.option('--dlt-debug-mode', is_flag=True, show_default=True, default=False, help='Use debug mode for DLT')
+@click.option('--name-suffix', default=None, help="Name suffix to use")
+def diff(
+        workflow_name: str,
+        use_cluster_id: str,
+        dlt_debug_mode: bool,
+        name_suffix: str
+):
+    b = Project()
+    b.configure({
+        "use_cluster_id": use_cluster_id,
+        "use_name_suffix": name_suffix,
+    })
+    if dlt_debug_mode:
+        b.configure({"dlt_debug_mode": "1"})
+    b.load_workflows("./workflows")
+    b.diff_workflow(workflow_name)
+    return b
+
+
+@click.command()
+@click.argument('workflow_name')
+@click.option('--use-cluster-id', default=None, help='Use existing cluster ID if possible')
+@click.option('--dlt-debug-mode', is_flag=True, show_default=True, default=False, help='Use debug mode for DLT')
+@click.option('--name-suffix', default=None, help="Name suffix to use")
+def render(
+        workflow_name: str,
+        use_cluster_id: str,
+        dlt_debug_mode: bool,
+        name_suffix: str
+):
+    b = Project()
+    b.configure({
+        "use_cluster_id": use_cluster_id,
+        "use_name_suffix": name_suffix,
+    })
+    if dlt_debug_mode:
+        b.configure({"dlt_debug_mode": "1"})
+    b.load_workflows("./workflows")
+    b.render_workflow(workflow_name)
+    return b
+
+
+@click.command()
+@click.argument('workflow_name')
+@click.argument('task_name')
+@click.option('--use-cluster-id', default=None, help='Use existing cluster ID if possible')
+@click.option('--dlt-debug-mode', is_flag=True, show_default=True, default=False, help='Use debug mode for DLT')
+@click.option('--name-suffix', default=None, help="Name suffix to use")
+@click.option('--full-refresh', is_flag=True, show_default=True, default=False, help='Perform DLT full refresh')
+@click.pass_context
+def run_task(
+        ctx,
+        workflow_name: str,
+        task_name: str,
+        use_cluster_id: str,
+        dlt_debug_mode: bool,
+        name_suffix: str,
+        full_refresh: bool
+):
+    b = ctx.invoke(
+        synch,
+        workflow_name=workflow_name,
+        use_cluster_id=use_cluster_id,
+        dlt_debug_mode=dlt_debug_mode,
+        name_suffix=name_suffix,
+    )
+    b.configure({
+        "full_refresh": full_refresh,
+    })
+    if dlt_debug_mode:
+        b.configure({"dlt_debug_mode": "1"})
+    b.load_workflows("./workflows")
+    b.run_task_sync(workflow_name, task_name)
+
+
+if __name__ == '__main__':
+    load_dotenv()
+    cli.add_command(info)
+    cli.add_command(render)
+    cli.add_command(synch)
+    cli.add_command(run)
+    cli.add_command(run_task)
+    cli.add_command(diff)
+    cli.add_command(delete)
+    cli()
