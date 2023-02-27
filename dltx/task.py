@@ -183,7 +183,9 @@ class DltTask(BaseTask):
         if target:
             data["target"] = target
 
-        data["clusters"][0]["policy_id"] = policy_id
+        if policy_id:
+            data["clusters"][0]["policy_id"] = policy_id
+
         data["clusters"][0]["autoscale"]["min_workers"] = min_workers
         data["clusters"][0]["autoscale"]["max_workers"] = max_workers
         return data
