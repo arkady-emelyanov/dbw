@@ -6,6 +6,11 @@ test:
 	coverage run -m unittest discover -s tests
 	coverage report
 
+.PHONY: coverage
+coverage: test
+	coverage html
+	open ./htmlcov/index.html
+
 .PHONY: synch
 synch:
 	python3 setup.py sdist
