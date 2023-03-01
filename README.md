@@ -117,10 +117,11 @@ def dlt_experiment_one():
 
 ## ROADMAP
 
-* [ ] Dbt task support (dbtCloud and dbtCore)
-* [ ] Refactor the code
 * [ ] Add tests
+* [ ] Refactor the code
 * [ ] Reconciliation: add state backend (file, s3)
+* [ ] Dbt task support (dbtCloud and dbtCore)
+
 
 ## Is it stable?
 
