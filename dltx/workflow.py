@@ -50,6 +50,7 @@ class Workflow:
         all_wfls = []
         while True:
             time.sleep(0.1)
+            # TODO: filter by "owned by me"?
             resp = service.jobs.list_jobs(
                 version=self.JOBS_API_VERSION,
                 limit=limit,
@@ -70,7 +71,9 @@ class Workflow:
 
     def get_extra_params(self, service: Service, global_params: Dict[AnyStr, Any]):
         extra_params = {
-            "use_name_prefix": self.get_real_name(service, global_params)
+            "use_name_prefix": self.get_real_name(service, global_params),
+            "tasks": self.tasks,
+            "job_clusters": self.job_clusters,
         }
         extra_params.update(global_params)
         return extra_params

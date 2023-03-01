@@ -17,7 +17,7 @@ class BaseCluster:
     def synch(self, service: Service, global_params: Dict[AnyStr, Any]):
         pass
 
-    def json(self, service: Service, global_params: Dict[AnyStr, Any]):
+    def json(self, service: Service, global_params: Dict[AnyStr, Any], **kwargs):
         spark_version = global_params.get("default_spark_version")
         node_type_id = global_params.get("default_node_type_id")
         driver_node_type_id = global_params.get("default_driver_node_type_id")
@@ -62,6 +62,9 @@ class BaseCluster:
             "min_workers": min_workers,
             "max_workers": max_workers,
         }
+
+        if kwargs.get("new_cluster_only"):
+            return self.params
 
         return {
             "job_cluster_key": self.name,

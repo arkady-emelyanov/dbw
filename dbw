@@ -154,6 +154,7 @@ def render(
 @click.option('--dlt-debug-mode', is_flag=True, show_default=True, default=False, help='Use debug mode for DLT')
 @click.option('--name-suffix', default=None, help="Name suffix to use")
 @click.option('--full-refresh', is_flag=True, show_default=True, default=False, help='Perform DLT full refresh')
+@click.option('--render-json-and-exit', is_flag=True, show_default=True, default=False, help='Render and exit')
 @click.pass_context
 def run_task(
         ctx,
@@ -162,7 +163,8 @@ def run_task(
         use_cluster_id: str,
         dlt_debug_mode: bool,
         name_suffix: str,
-        full_refresh: bool
+        full_refresh: bool,
+        render_json_and_exit: bool,
 ):
     b = ctx.invoke(
         synch,
@@ -173,6 +175,7 @@ def run_task(
     )
     b.configure({
         "full_refresh": full_refresh,
+        "render_json_and_exit": render_json_and_exit,
     })
     if dlt_debug_mode:
         b.configure({"dlt_debug_mode": "1"})

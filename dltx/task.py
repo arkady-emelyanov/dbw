@@ -1,8 +1,13 @@
+import json
 import time
+import datetime
+
 from progress.spinner import Spinner
+from rich import print_json
 from dltx.service import Service
 from dltx.notebook import TaskNotebook
-from typing import Dict, AnyStr, Any
+from dltx.job_cluster import JobCluster
+from typing import Dict, AnyStr, Any, List
 
 
 class BaseTask:
@@ -217,35 +222,89 @@ class NbTask(BaseTask):
         self.nb_remote_path = tn.synch(service, global_params)
 
     def run_sync(self, service: Service, global_params: Dict[AnyStr, Any]):
-        print("Notebook tasks can't be triggered.")
+        job_clusters: Dict[AnyStr, JobCluster] = global_params.get("job_clusters")
+        if not job_clusters.get("default"):
+            raise Exception("'default' cluster should be in the list of clusters")
 
-    def task_json(self, service: Service, global_params: Dict[AnyStr, Any]):
+        ts = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        data = {
+            "run_name": f"{self.get_real_name(service, global_params)}-{ts}",
+            "new_cluster": job_clusters["default"].json(
+                service,
+                global_params,
+                new_cluster_only=True
+            ),
+            "notebook_task": self.task_json(
+                service,
+                global_params,
+                notebook_task_only=True,
+            ),
+        }
+        if global_params.get("render_json_and_exit"):
+            return print_json(json.dumps(data))
+
+        # TODO: refactor
+        run_create_resp = service.jobs.submit_run(**data)
+        spinner = Spinner()
+        last_check = 0
+        run_url_published = False
+        while True:
+            if last_check % 30 == 0:
+                run_status_resp = service.jobs.get_run(run_id=run_create_resp["run_id"])
+                run_state = run_status_resp["state"]
+                if not run_url_published and run_status_resp["run_page_url"]:
+                    run_url_published = True
+                    print("Run URL:", run_status_resp["run_page_url"])
+
+                last_check = 0
+                if run_state["life_cycle_state"] == "INTERNAL_ERROR":
+                    spinner.message = 'Run failed '
+
+                if run_state["life_cycle_state"] == "PENDING":
+                    spinner.message = 'Waiting workflow run to start: '
+
+                if run_state["life_cycle_state"] == "RUNNING":
+                    spinner.message = 'Waiting workflow run to finish: '
+
+                if run_status_resp.get("end_time", 0) > 0:
+                    spinner.finish()
+                    break
+
+            time.sleep(0.1)
+            last_check += 1
+            spinner.next()
+
+    def task_json(self, service: Service, global_params: Dict[AnyStr, Any], **kwargs):
         tn = TaskNotebook(self.name, self.get_real_name(service, global_params))
         self.nb_remote_path = tn.json(service, global_params)
+        notebook_task = {
+            "notebook_path": self.nb_remote_path,
+            "base_parameters": {  # make it variable
+                "dbw.use_name_suffix": global_params.get("use_name_suffix"),
+                "dbw.resource_storage_root": global_params.get("resource_storage_root"),
+                "dbw.library_storage_root": global_params.get("library_storage_root"),
+            }
+        }
+        spark_conf = self.params.get("spark_conf")
+        if spark_conf:
+            notebook_task["base_parameters"].update(spark_conf)
+        if kwargs.get("notebook_task_only"):
+            return notebook_task
+
         data = {
             "task_key": self.name,
             "source": "WORKSPACE",
-            "notebook_task": {
-                "notebook_path": self.nb_remote_path,
-                "base_parameters": {  # make it variable
-                    "dbw.use_name_suffix": global_params.get("use_name_suffix"),
-                    "dbw.resource_storage_root": global_params.get("resource_storage_root"),
-                    "dbw.library_storage_root": global_params.get("library_storage_root"),
-                }
-            }
+            "notebook_task": notebook_task,
         }
-
-        spark_conf = self.params.get("spark_conf")
-        if spark_conf:
-            data["notebook_task"]["base_parameters"].update(spark_conf)
-
-        use_cluster_id = global_params.get("use_cluster_id", "")
-        if use_cluster_id:
+        use_cluster_id = global_params.get("use_cluster_id")
+        disable_use_cluster_id = kwargs.get("disable_use_cluster")
+        if use_cluster_id and not disable_use_cluster_id:
             data["existing_cluster_id"] = use_cluster_id
         else:
             data["job_cluster_key"] = self.params.get("job_cluster_key")
 
-        depends_on = self.params.get("depends_on", None)
-        if depends_on:
+        depends_on = self.params.get("depends_on")
+        disable_depends_on = kwargs.get("disable_depends_on")
+        if depends_on and not disable_depends_on:
             data["depends_on"] = depends_on
         return data
