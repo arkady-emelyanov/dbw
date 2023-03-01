@@ -64,6 +64,8 @@ instead of Run scoped.
 
 ## Command-line interface
 
+Developer terminal.
+
 Commands:
 * info - Get current configuration
 * render - Renders workflow JSON representation
@@ -75,11 +77,12 @@ Commands:
 
 To deploy the example workflow provided with this repository use following commands:
 * `make run` - will create an example workflow (or update existing) and run it
-* `make run-task` - will create an example workflow (or update existing) and run individual workflow task (DLT-only)
+* `make run-task` - will create an example workflow (or update existing) and run individual workflow task
 
 
 ## Library interface
 
+Pyspark helpers.
 
 Sample DLT task definition:
 ```python
@@ -108,6 +111,16 @@ def dlt_experiment_one():
     return spark.createDataFrame([])
 
 ```
+
+`table_name` formats target table name according to convention.
+
+
+## ROADMAP
+
+* [ ] Dbt task support (dbtCloud and dbtCore)
+* [ ] Refactor the code
+* [ ] Add tests
+* [ ] Reconciliation: add state backend (file, s3)
 
 ## Is it stable?
 

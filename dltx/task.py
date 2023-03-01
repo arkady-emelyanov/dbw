@@ -22,8 +22,11 @@ class BaseTask:
         raise Exception("Not supported")
 
     def get_real_name(self, service: Service, global_params: Dict[AnyStr, Any]):
-        prefix = global_params.get("use_name_prefix")
-        return f"{prefix}-{self.name}"
+        prefix = global_params.get("use_name_prefix", "")
+        if prefix:
+            return f"{prefix}-{self.name}"
+        else:
+            return self.name
 
     def delete(self, service: Service, global_params: Dict[AnyStr, Any]):
         pass
@@ -45,7 +48,8 @@ class DltTask(BaseTask):
 
     def get_id(self, service: Service, global_params: Dict[AnyStr, Any]):
         query_resp = service.api_client.perform_query(
-            method="GET", path="/pipelines/",
+            method="GET",
+            path="/pipelines/",
             data={
                 "filter": f"name like '{self.get_real_name(service, global_params)}'",
             }
@@ -170,9 +174,9 @@ class DltTask(BaseTask):
 
         data["configuration"] = {}
         data["configuration"].update({
-            "dbw.use_name_suffix": global_params.get("use_name_suffix"),
-            "dbw.resource_storage_root": global_params.get("resource_storage_root"),
-            "dbw.library_storage_root": global_params.get("library_storage_root"),
+            "dbw.use_name_suffix": global_params.get("use_name_suffix", ""),
+            "dbw.resource_storage_root": global_params.get("resource_storage_root", ""),
+            "dbw.library_storage_root": global_params.get("library_storage_root", ""),
         })
 
         if self.params.get("spark_conf"):
@@ -280,9 +284,9 @@ class NbTask(BaseTask):
         notebook_task = {
             "notebook_path": self.nb_remote_path,
             "base_parameters": {  # make it variable
-                "dbw.use_name_suffix": global_params.get("use_name_suffix"),
-                "dbw.resource_storage_root": global_params.get("resource_storage_root"),
-                "dbw.library_storage_root": global_params.get("library_storage_root"),
+                "dbw.use_name_suffix": global_params.get("use_name_suffix", ""),
+                "dbw.resource_storage_root": global_params.get("resource_storage_root", ""),
+                "dbw.library_storage_root": global_params.get("library_storage_root", ""),
             }
         }
         spark_conf = self.params.get("spark_conf")

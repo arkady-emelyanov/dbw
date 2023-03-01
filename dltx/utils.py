@@ -19,7 +19,7 @@ def get_param(name, default=None) -> Any:
 
 
 def table_name(name) -> str:
-    suffix = get_param("dwb.use_name_suffix", None)
+    suffix = get_param("dwb.use_name_suffix")
     if suffix:
         return f"{name}_{suffix}"
     else:

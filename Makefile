@@ -1,6 +1,10 @@
 .PHONY: all
 all:
 
+.PHONY: test
+test:
+	coverage run -m unittest discover -s tests
+	coverage report
 
 .PHONY: synch
 synch:

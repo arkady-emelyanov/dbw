@@ -1,4 +1,8 @@
 __pycache__
 dist
+htmlcov
 .env
 *.egg-info
+.pytest_cache
+.coverage
+

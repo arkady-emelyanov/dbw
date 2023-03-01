@@ -3,6 +3,22 @@ from databricks_cli.sdk.api_client import ApiClient
 from databricks_cli.sdk import JobsService, DbfsService, DeltaPipelinesService, WorkspaceService
 
 
+class MockApiClient:
+    def __init__(self):
+        self.perform_query_response = {}
+
+    def set_perform_query_result(self, res):
+        self.perform_query_response = res
+
+    def perform_query(self, **kwargs):
+        return self.perform_query_response
+
+
+class MockService:
+    def __init__(self):
+        self.api_client = MockApiClient()
+
+
 class Service:
 
     def __init__(self):
