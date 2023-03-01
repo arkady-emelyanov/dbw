@@ -2,7 +2,8 @@ from dltx.workflow import Workflow
 
 with Workflow(
         name="workflow_example",
-        schedule="@daily"
+        schedule="@daily",
+        # max_concurrent_runs=5,
 ) as w:
     # register the job cluster.
     # required section for notebook run if shared cluster id wasn't provided.

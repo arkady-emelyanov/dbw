@@ -75,16 +75,7 @@ class Project:
 
     def render_workflow(self, workflow_name):
         workflow = self.find_workflow_by_name(workflow_name)
-        data = workflow.json(self.service, self.params)
-        print("Workflow:", workflow.get_real_name(self.service, self.params))
-        print_json(json.dumps(data, indent=2))
-        extra_params = workflow.get_extra_params(self.service, self.params)
-        for k in workflow.tasks:
-            t = workflow.tasks[k]
-            task_data = t.pipeline_json(self.service, extra_params)
-            if task_data:
-                print("Task:", t.get_real_name(self.service, extra_params))
-                print_json(json.dumps(task_data, indent=2))
+        workflow.render(self.service, self.params)
 
     def synch_workflow(self, workflow_name):
         # synch library
@@ -102,7 +93,9 @@ class Project:
 
     def run_workflow_sync(self, workflow_name, token):
         workflow = self.find_workflow_by_name(workflow_name)
-        workflow_id = workflow.get_id_by_name(self.service, self.params)
+        #workflow.run_sync(self.service, self.params)
+
+        workflow_id = workflow.get_id(self.service, self.params)
         if not workflow_id:
             raise Exception(f"Workflow with name={workflow_name} was not found")
 

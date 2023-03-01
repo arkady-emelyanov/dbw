@@ -213,9 +213,6 @@ class DltTask(BaseTask):
 
 
 class NbTask(BaseTask):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.nb_remote_path = ""
 
     def delete(self, service: Service, global_params: Dict[AnyStr, Any]):
         tn = TaskNotebook(self.name, self.get_real_name(service, global_params))
@@ -223,7 +220,7 @@ class NbTask(BaseTask):
 
     def synch(self, service: Service, global_params: Dict[AnyStr, Any]):
         tn = TaskNotebook(self.name, self.get_real_name(service, global_params))
-        self.nb_remote_path = tn.synch(service, global_params)
+        tn.synch(service, global_params)
 
     def run_sync(self, service: Service, global_params: Dict[AnyStr, Any]):
         job_clusters: Dict[AnyStr, JobCluster] = global_params.get("job_clusters")
@@ -280,9 +277,9 @@ class NbTask(BaseTask):
 
     def task_json(self, service: Service, global_params: Dict[AnyStr, Any], **kwargs):
         tn = TaskNotebook(self.name, self.get_real_name(service, global_params))
-        self.nb_remote_path = tn.json(service, global_params)
+        remote_path = tn.json(service, global_params)
         notebook_task = {
-            "notebook_path": self.nb_remote_path,
+            "notebook_path": remote_path,
             "base_parameters": {  # make it variable
                 "dbw.use_name_suffix": global_params.get("use_name_suffix", ""),
                 "dbw.resource_storage_root": global_params.get("resource_storage_root", ""),

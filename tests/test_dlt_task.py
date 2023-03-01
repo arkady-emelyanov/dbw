@@ -4,7 +4,7 @@ from dltx.task import DltTask
 from dltx.service import MockService
 
 
-class TestTask(unittest.TestCase):
+class TestDltTask(unittest.TestCase):
     """Task tests"""
 
     def test_task_json(self):

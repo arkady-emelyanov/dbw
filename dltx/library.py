@@ -10,6 +10,9 @@ class Library:
 
     def get_remote_path(self, service: Service, global_params: Dict[AnyStr, Any]):
         storage_root = global_params.get("library_storage_root")
+        if not storage_root:
+            raise Exception("'library_storage_root' is not defined!")
+
         remote_path = f"{storage_root}/{self.project_full_name}.tar.gz"
         return remote_path
 
