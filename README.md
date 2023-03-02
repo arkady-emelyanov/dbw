@@ -6,14 +6,14 @@ To learn more about Databricks Workflows
 
 ## Concept
 
-Dbw project contains three type of objects: resources, 
+Dbw project contains three type of objects: resources,
 tasks, and workflows.
 
 *Resource*. Arbitrary file, usually some piece of
 configuration. Resources are located in the [resources folder](./resources).
 (not currently implemented)
 
-*Task*. Notebook and DLT tasks are currently supported. 
+*Task*. Notebook and DLT tasks are currently supported.
 Tasks located in the [tasks folder](./tasks). Tasks can
 be shared across multiple workflows.
 
@@ -24,6 +24,7 @@ be shared across multiple workflows.
 Create `.env` file in the root of the project (see below).
 
 Example environment file:
+
 ```
 ##
 ## parameters required by framework
@@ -55,10 +56,10 @@ DBW_DEFAULT_DRIVER_NODE_TYPE_ID="m5.large"
 ```
 
 * Property `DBW_USE_NAME_SUFFIX` is required to provide
-uniqueness to the names of Delta Live Table pipelines (and should be generated for each developer).
+  uniqueness to the names of Delta Live Table pipelines (and should be generated for each developer).
 * Property `DBW_DLT_DEBUG_MODE` enables DLT pipeline cluster to keep running after pipeline finished.
 * Property `DBW_USE_CLUSTER_ID` enables Notebook type tasks to be scheduled on the shared cluster
-instead of Run scoped.
+  instead of Run scoped.
 * Property `DBW_DLT_POLICY_ID` global default policy to use for DLT pipeline clusters.
 * Property `DBW_POLICY_ID` global default policy to use for Job scoped clusters.
 
@@ -67,6 +68,7 @@ instead of Run scoped.
 Developer terminal.
 
 Commands:
+
 * info - Get current configuration
 * render - Renders workflow JSON representation
 * run - Runs the Workflow
@@ -76,15 +78,16 @@ Commands:
 * delete - Removes the project from Databricks workspace
 
 To deploy the example workflow provided with this repository use following commands:
+
 * `make run` - will create an example workflow (or update existing) and run it
 * `make run-task` - will create an example workflow (or update existing) and run individual workflow task
-
 
 ## Library interface
 
 Pyspark helpers.
 
-Sample DLT task definition:
+Consider following DLT task definition:
+
 ```python
 # ...
 with Workflow() as w:
@@ -96,32 +99,31 @@ with Workflow() as w:
     )
 ```
 
-Sample DLT task code:
+Then access to  DLT task could use helpers:
+
 ```python
-#...
+# ...
 from dltx.utils import table_name, get_param
 
+
 # use table_name() helper to generate final DLT name
-# using naming convention.
+# using naming convention, e.g. dlt_experiment_one_<suffix>
 @dlt.table(name=table_name("dlt_experiment_one"))
 def dlt_experiment_one():
     # use get_param() helper to get global or 
     # task level defined parameter (see example tasks)
-    greeting = get_param("hello") # will have "world" value
+    greeting = get_param("hello")  # will have "world" value
     return spark.createDataFrame([])
 
 ```
 
 `table_name` formats target table name according to convention.
 
-
 ## ROADMAP
 
 * [ ] Add tests
 * [ ] Refactor the code
 * [ ] Reconciliation: add state backend (file, s3)
-* [ ] Dbt task support (dbtCloud and dbtCore)
-
 
 ## Is it stable?
 
