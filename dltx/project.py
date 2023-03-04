@@ -12,9 +12,12 @@ from typing import List
 
 from progress.spinner import Spinner
 
+from dltx.state import State
 from dltx.workflow import Workflow
 from dltx.service import Service
 from dltx.library import Library
+from dltx.notebook import Notebook
+from dltx.task import DltTask
 
 
 class Project:
@@ -59,7 +62,7 @@ class Project:
             if isinstance(m, Workflow):
                 self.workflows.append(m)
 
-    def find_workflow_by_name(self, workflow_name) -> Workflow:
+    def _find_workflow(self, workflow_name) -> Workflow:
         for x in self.workflows:
             if x.name == workflow_name:
                 return x
@@ -70,30 +73,31 @@ class Project:
         print_json(json.dumps(self.params, indent=2))
 
     def delete_workflow(self, workflow_name):
-        workflow = self.find_workflow_by_name(workflow_name)
-        workflow.delete(self.service, self.params)
+        state = State(workflow_name, self.params)
+        self._delete_using_state(state)
 
     def render_workflow(self, workflow_name):
-        workflow = self.find_workflow_by_name(workflow_name)
+        workflow = self._find_workflow(workflow_name)
         workflow.render(self.service, self.params)
 
     def synch_workflow(self, workflow_name):
-        # synch library
+        # TODO: application should be loaded
         library = Library(f"app-{self.params.get('use_name_suffix')}")
         library.synch(self.service, self.params)
         self.params.update({
             "library_install_path": library.get_install_path(self.service, self.params),
         })
-        workflow = self.find_workflow_by_name(workflow_name)
+        workflow = self._find_workflow(workflow_name)
         workflow.synch(self.service, self.params)
+        self._synch_state(workflow_name)
 
     def diff_workflow(self, workflow_name):
-        workflow = self.find_workflow_by_name(workflow_name)
+        workflow = self._find_workflow(workflow_name)
         workflow.diff(self.service, self.params)
 
     def run_workflow_sync(self, workflow_name, token):
-        workflow = self.find_workflow_by_name(workflow_name)
-        #workflow.run_sync(self.service, self.params)
+        workflow = self._find_workflow(workflow_name)
+        # workflow.run_sync(self.service, self.params)
 
         workflow_id = workflow.get_id(self.service, self.params)
         if not workflow_id:
@@ -159,5 +163,26 @@ class Project:
                 print("")
 
     def run_task_sync(self, workflow_name, task_name):
-        workflow = self.find_workflow_by_name(workflow_name)
-        print(workflow.run_task_sync(task_name, self.service, self.params))
+        workflow = self._find_workflow(workflow_name)
+        workflow.run_task_sync(task_name, self.service, self.params)
+
+    def _synch_state(self, workflow_name):
+        state = State(workflow_name, self.params)
+        change_event_list = self.service.changes.finalize()
+        state.update_state(change_event_list)
+
+    def _delete_using_state(self, state: State):
+        state_map = state.get_state_map()
+        delete_mappings = {
+            "library": Library,
+            "notebook": Notebook,
+            "pipeline": DltTask,
+            "workflow": Workflow,
+        }
+        for k in state_map:
+            f = delete_mappings.get(k)
+            if not f:
+                print(f"Skipping {k}")
+            for object_id in state_map[k]:
+                f.purge(self.service, self.params, object_id)
+        state.reset_state()

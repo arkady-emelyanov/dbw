@@ -22,6 +22,7 @@ with Workflow(
     # task name represent name of the file in ./tasks/ directory
     w.dlt_task(
         name="dlt_sample_task",
+        # notebook=notebook("dlt_sample_task"),
         spark_conf={
             "hello": "world",
         },
@@ -38,6 +39,7 @@ with Workflow(
     # Task name represent name of the file in ./tasks/ directory
     w.nb_task(
         name="nb_sample_task",
+        # notebook=notebook("dlt_sample_task"),
         depends_on=[{"task_key": "dlt_sample_task"}],
         job_cluster_key="default",
         spark_conf={

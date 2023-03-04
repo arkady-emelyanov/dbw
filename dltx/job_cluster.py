@@ -11,9 +11,6 @@ class BaseCluster:
         self.name = name
         self.params = kwargs
 
-    def delete(self, service: Service, global_params: Dict[AnyStr, Any]):
-        pass
-
     def synch(self, service: Service, global_params: Dict[AnyStr, Any]):
         pass
 

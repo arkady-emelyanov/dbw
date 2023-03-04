@@ -8,6 +8,11 @@ class Library:
     def __init__(self, project_full_name):
         self.project_full_name = project_full_name
 
+    @staticmethod
+    def purge(service: Service, global_params: Dict[AnyStr, Any], remote_path):
+        print(f"Deleting the library:", remote_path)
+        service.dbfs.delete(remote_path)
+
     def get_remote_path(self, service: Service, global_params: Dict[AnyStr, Any]):
         storage_root = global_params.get("library_storage_root")
         if not storage_root:
@@ -23,6 +28,7 @@ class Library:
     def synch(self, service: Service, global_params: Dict[AnyStr, Any]):
         local_path = "dist/dltx-0.1.tar.gz"
         remote_path = self.get_remote_path(service, global_params)
+        path_exists = service.dbfs_path_exists(remote_path)
 
         if not os.path.exists(local_path):  # FIXME: fix later
             raise Exception("No library archive found")
@@ -31,3 +37,6 @@ class Library:
         with open(local_path, "rb") as f:
             content = b64encode(f.read()).decode()
             service.dbfs.put(remote_path, contents=content, overwrite=True)
+
+        if not path_exists:
+            service.changes.create("library", remote_path)

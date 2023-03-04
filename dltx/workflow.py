@@ -119,23 +119,10 @@ class Workflow:
                 print("Task:", t.get_real_name(service, global_params))
                 print_json(json.dumps(task_data, indent=2))
 
-    # TODO: must be a state
-    @inject_workflow_params
-    def delete(self, service: Service, global_params: Dict[AnyStr, Any]):
-        workflow_id = self.get_id(service, global_params)
-        print(f"Start deletion of the workflow: {self.get_real_name(service, global_params)}")
-        for x in self.tasks:
-            t = self.tasks[x]
-            t.delete(service, global_params)
-
-        for x in self.job_clusters:
-            c = self.job_clusters[x]
-            c.delete(service, global_params)
-
-        if workflow_id:
-            print(f"Deleting the workflow: {self.get_real_name(service, global_params)}")
-            service.jobs.delete_job(workflow_id)
-        print("Deletion complete!")
+    @staticmethod
+    def purge(service: Service, global_params: Dict[AnyStr, Any], workflow_id):
+        print(f"Deleting the workflow:", workflow_id)
+        service.jobs.delete_job(workflow_id)
 
     @inject_workflow_params
     def synch(self, service: Service, global_params: Dict[AnyStr, Any]):
@@ -149,7 +136,8 @@ class Workflow:
 
         data = self.json(service, global_params)
         if not workflow_id:
-            service.jobs.create_job(**data)
+            create_resp = service.jobs.create_job(**data)
+            service.changes.create("workflow", create_resp["job_id"])
         else:
             service.jobs.reset_job(workflow_id, new_settings=data)
         print("Synchronization complete.")

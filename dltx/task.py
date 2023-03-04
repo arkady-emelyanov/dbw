@@ -5,7 +5,7 @@ import datetime
 from progress.spinner import Spinner
 from rich import print_json
 from dltx.service import Service
-from dltx.notebook import TaskNotebook
+from dltx.notebook import Notebook
 from dltx.job_cluster import JobCluster
 from typing import Dict, AnyStr, Any, List
 
@@ -28,7 +28,8 @@ class BaseTask:
         else:
             return self.name
 
-    def delete(self, service: Service, global_params: Dict[AnyStr, Any]):
+    @staticmethod
+    def purge(service: Service, global_params: Dict[AnyStr, Any], task_id):
         pass
 
     def synch(self, service: Service, global_params: Dict[AnyStr, Any]):
@@ -45,6 +46,11 @@ class BaseTask:
 
 
 class DltTask(BaseTask):
+
+    @staticmethod
+    def purge(service: Service, global_params: Dict[AnyStr, Any], task_id):
+        print("Deleting the DLT pipeline:", task_id)
+        service.pipelines.delete(task_id)
 
     def get_id(self, service: Service, global_params: Dict[AnyStr, Any]):
         query_resp = service.api_client.perform_query(
@@ -100,24 +106,16 @@ class DltTask(BaseTask):
         spinner.finish()
         return last_state
 
-    def delete(self, service: Service, global_params: Dict[AnyStr, Any]):
-        pipeline_id = self.get_id(service, global_params)
-        if pipeline_id:
-            print("Deleting the DLT pipeline:", self.get_real_name(service, global_params))
-            service.pipelines.delete(pipeline_id)
-
-        tn = TaskNotebook(self.name, self.get_real_name(service, global_params))
-        tn.delete(service, global_params)
-
     def synch(self, service: Service, global_params: Dict[AnyStr, Any]):
-        tn = TaskNotebook(self.name, self.get_real_name(service, global_params))
+        tn = Notebook(self.name, self.get_real_name(service, global_params))
         tn.synch(service, global_params)
 
         pipeline_id = self.get_id(service, global_params)
         data = self.pipeline_json(service, global_params)
         if not pipeline_id:
             print("Creating the DLT pipeline:", self.get_real_name(service, global_params))
-            service.pipeline_create(data)
+            create_resp = service.pipeline_create(data)
+            service.changes.create("pipeline", create_resp["pipeline_id"])
         else:
             print("Updating the DLT pipeline:", self.get_real_name(service, global_params))
             service.pipeline_update(pipeline_id, data)
@@ -128,7 +126,7 @@ class DltTask(BaseTask):
         if not dlt_storage_root:
             raise Exception("dlt_storage_root is not set")
 
-        tn = TaskNotebook(self.name, self.get_real_name(service, global_params))
+        tn = Notebook(self.name, self.get_real_name(service, global_params))
         nb_remote_path = tn.get_remote_path(service, global_params)
         pipeline_name = self.get_real_name(service, global_params)
         data = {
@@ -214,12 +212,8 @@ class DltTask(BaseTask):
 
 class NbTask(BaseTask):
 
-    def delete(self, service: Service, global_params: Dict[AnyStr, Any]):
-        tn = TaskNotebook(self.name, self.get_real_name(service, global_params))
-        tn.delete(service, global_params)
-
     def synch(self, service: Service, global_params: Dict[AnyStr, Any]):
-        tn = TaskNotebook(self.name, self.get_real_name(service, global_params))
+        tn = Notebook(self.name, self.get_real_name(service, global_params))
         tn.synch(service, global_params)
 
     def run_sync(self, service: Service, global_params: Dict[AnyStr, Any]):
@@ -276,7 +270,7 @@ class NbTask(BaseTask):
             spinner.next()
 
     def task_json(self, service: Service, global_params: Dict[AnyStr, Any], **kwargs):
-        tn = TaskNotebook(self.name, self.get_real_name(service, global_params))
+        tn = Notebook(self.name, self.get_real_name(service, global_params))
         remote_path = tn.json(service, global_params)
         notebook_task = {
             "notebook_path": remote_path,

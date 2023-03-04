@@ -16,6 +16,10 @@ synch:
 	python3 setup.py sdist
 	./dbw synch workflow_example
 
+.PHONY: delete
+delete:
+	./dbw delete workflow_example
+
 .PHONY:
 run: synch
 	./dbw run workflow_example
