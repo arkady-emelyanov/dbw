@@ -14,7 +14,7 @@ configuration. Resources are located in the [resources folder](./resources).
 (not currently implemented)
 
 *Task*. Notebook and DLT tasks are currently supported.
-Tasks located in the [tasks folder](./tasks). Tasks can
+Tasks located in the [tasks folder](./notebooks). Tasks can
 be shared across multiple workflows.
 
 *Workflow*. The DAG.

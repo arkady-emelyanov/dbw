@@ -4,13 +4,13 @@ from dltx.task import NbTask
 from dltx.service import MockService
 
 
-class TestNbTask(unittest.TestCase):
+class TestNotebookTask(unittest.TestCase):
     """Task tests"""
 
     def test_task_json(self):
         service_mock = MockService()
 
-        task = NbTask(name="mynbtask")
+        task = NbTask(name="mynbtask", notebook="/notebook.py")
         r = task.task_json(service_mock, {
             "workspace_root": "/home/user",
         })
@@ -19,7 +19,7 @@ class TestNbTask(unittest.TestCase):
             'source': 'WORKSPACE',
             'job_cluster_key': None,
             'notebook_task': {
-                'notebook_path': '/home/user/mynbtask',
+                'notebook_path': '/home/user/notebook',
                 'base_parameters': {
                     'dbw.use_name_suffix': '',
                     'dbw.resource_storage_root': '',

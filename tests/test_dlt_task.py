@@ -8,7 +8,7 @@ class TestDltTask(unittest.TestCase):
     """Task tests"""
 
     def test_task_json(self):
-        task = DltTask(name="mydlttask")
+        task = DltTask(name="mydlttask", notebook="/notebook.py")
         service_mock = MockService()
         service_mock.api_client.set_perform_query_result({
             "statuses": [{
@@ -24,7 +24,7 @@ class TestDltTask(unittest.TestCase):
         })
 
     def test_pipeline_json(self):
-        task = DltTask(name="mydlttask")
+        task = DltTask(name="mydlttask", notebook="/notebook.py")
         service_mock = MockService()
         service_mock.api_client.set_perform_query_result({
             "statuses": [{
@@ -50,7 +50,7 @@ class TestDltTask(unittest.TestCase):
             }],
             "libraries": [{
                 "notebook": {
-                    "path": "/root/mydlttask"
+                    "path": "/root/notebook"
                 }
             }],
             "configuration": {

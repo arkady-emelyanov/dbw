@@ -12,10 +12,12 @@ from typing import Dict, AnyStr, Any, List
 
 class BaseTask:
     def __init__(self, **kwargs):
-        name = kwargs.get("name", "")
-        if name == "":
+        self.name = kwargs.get("name")
+        if not self.name:
             raise Exception("Missing name")
-        self.name = name
+        self.notebook = kwargs.get("notebook")
+        if not self.notebook:
+            raise Exception(f"Missing 'notebook' parameter for task: '{self.name}'")
         self.params = kwargs
 
     def get_id(self, service: Service, global_params: Dict[AnyStr, Any]):
@@ -107,8 +109,8 @@ class DltTask(BaseTask):
         return last_state
 
     def synch(self, service: Service, global_params: Dict[AnyStr, Any]):
-        tn = Notebook(self.name, self.get_real_name(service, global_params))
-        tn.synch(service, global_params)
+        notebook = Notebook(self.params["notebook"])
+        notebook.synch(service, global_params)
 
         pipeline_id = self.get_id(service, global_params)
         data = self.pipeline_json(service, global_params)
@@ -126,8 +128,8 @@ class DltTask(BaseTask):
         if not dlt_storage_root:
             raise Exception("dlt_storage_root is not set")
 
-        tn = Notebook(self.name, self.get_real_name(service, global_params))
-        nb_remote_path = tn.get_remote_path(service, global_params)
+        notebook = Notebook(self.params["notebook"])
+        remote_path = notebook.get_remote_path(service, global_params)
         pipeline_name = self.get_real_name(service, global_params)
         data = {
             "name": pipeline_name,
@@ -144,7 +146,7 @@ class DltTask(BaseTask):
             }],
             "libraries": [{
                 "notebook": {
-                    "path": nb_remote_path,
+                    "path": remote_path,
                 }
             }],
         }
@@ -213,8 +215,8 @@ class DltTask(BaseTask):
 class NbTask(BaseTask):
 
     def synch(self, service: Service, global_params: Dict[AnyStr, Any]):
-        tn = Notebook(self.name, self.get_real_name(service, global_params))
-        tn.synch(service, global_params)
+        notebook = Notebook(self.params["notebook"])
+        notebook.synch(service, global_params)
 
     def run_sync(self, service: Service, global_params: Dict[AnyStr, Any]):
         job_clusters: Dict[AnyStr, JobCluster] = global_params.get("job_clusters")
@@ -270,8 +272,8 @@ class NbTask(BaseTask):
             spinner.next()
 
     def task_json(self, service: Service, global_params: Dict[AnyStr, Any], **kwargs):
-        tn = Notebook(self.name, self.get_real_name(service, global_params))
-        remote_path = tn.json(service, global_params)
+        notebook = Notebook(self.params["notebook"])
+        remote_path = notebook.json(service, global_params)
         notebook_task = {
             "notebook_path": remote_path,
             "base_parameters": {  # make it variable

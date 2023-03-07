@@ -9,9 +9,7 @@ with Workflow(
     # required section for notebook run if shared cluster id wasn't provided.
     w.job_cluster(
         name="default",
-
-        # cluster default configuration options:
-        # policy_id=Variable.get("policy_id"),
+        # policy_id="xxxx",
         # spark_version="12.1.x-scala2.12",
         # node_type_id="m5d.large",
         # min_workers=1,
@@ -21,16 +19,12 @@ with Workflow(
     # create DLT task.
     # task name represent name of the file in ./tasks/ directory
     w.dlt_task(
-        name="dlt_sample_task",
-        # notebook=notebook("dlt_sample_task"),
+        name="dlt_task",
+        notebook="dlt_notebook.py",
         spark_conf={
             "hello": "world",
         },
-        # DLT task default configuration options:
         # target="default",
-        #
-        # Cluster default configuration options:
-        # spark_conf={}
         # min_workers=1,
         # max_workers=3,
     )
@@ -38,16 +32,13 @@ with Workflow(
     # create a Notebook task.
     # Task name represent name of the file in ./tasks/ directory
     w.nb_task(
-        name="nb_sample_task",
-        # notebook=notebook("dlt_sample_task"),
-        depends_on=[{"task_key": "dlt_sample_task"}],
+        name="notebook_task",
+        notebook="submit_notebook",
+        depends_on=[{"task_key": "dlt_task"}],
         job_cluster_key="default",
         spark_conf={
             "hello": "world",
         },
-
-        # Cluster default configuration options:
-        # spark_conf={}
         # min_workers=1,
         # max_workers=3,
     )
