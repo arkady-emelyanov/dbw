@@ -39,4 +39,4 @@ class Library:
             service.dbfs.put(remote_path, contents=content, overwrite=True)
 
         if not path_exists:
-            service.changes.create("library", remote_path)
+            global_params["changes"].add_object("library", remote_path)

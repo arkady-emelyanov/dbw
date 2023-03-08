@@ -12,13 +12,9 @@ from typing import List
 
 from progress.spinner import Spinner
 
-from dltx.state import State
 from dltx.workflow import Workflow
 from dltx.service import Service
 from dltx.library import Library
-from dltx.notebook import Notebook
-from dltx.task import PipelineTask
-from dltx.file_resource import FileResource
 
 
 class Project:
@@ -74,8 +70,8 @@ class Project:
         print_json(json.dumps(self.params, indent=2))
 
     def delete_workflow(self, workflow_name):
-        state = State(workflow_name, self.params)
-        self._delete_using_state(state)
+        workflow = self._find_workflow(workflow_name)
+        workflow.delete(self.service, self.params)
 
     def render_workflow(self, workflow_name):
         workflow = self._find_workflow(workflow_name)
@@ -90,7 +86,6 @@ class Project:
         })
         workflow = self._find_workflow(workflow_name)
         workflow.synch(self.service, self.params)
-        self._synch_state(workflow_name)
 
     def diff_workflow(self, workflow_name):
         workflow = self._find_workflow(workflow_name)
@@ -98,7 +93,7 @@ class Project:
 
     def run_workflow_sync(self, workflow_name, token):
         workflow = self._find_workflow(workflow_name)
-        # workflow.run_sync(self.service, self.params)
+        # TODO: workflow.run_sync(self.service, self.params)
 
         workflow_id = workflow.get_id(self.service, self.params)
         if not workflow_id:
@@ -169,25 +164,3 @@ class Project:
 
         task_params = workflow.inject_workflow_level_params(self.service, self.params)
         task.run_sync(self.service, task_params)
-
-    def _synch_state(self, workflow_name):
-        state = State(workflow_name, self.params)
-        change_event_list = self.service.changes.finalize()
-        state.update_state(change_event_list)
-
-    def _delete_using_state(self, state: State):
-        state_map = state.get_state_map()
-        delete_mappings = {
-            "library": Library,
-            "notebook": Notebook,
-            "pipeline": PipelineTask,
-            "workflow": Workflow,
-            "file_resource": FileResource,
-        }
-        for k in state_map:
-            f = delete_mappings.get(k)
-            if not f:
-                print(f"Skipping {k}")
-            for object_id in state_map[k]:
-                f.purge(self.service, self.params, object_id)
-        state.reset_state()

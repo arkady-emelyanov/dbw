@@ -117,7 +117,7 @@ class PipelineTask(BaseTask):
         if not pipeline_id:
             print("Creating the DLT pipeline:", self.get_real_name(service, global_params))
             create_resp = service.pipeline_create(data)
-            service.changes.create("pipeline", create_resp["pipeline_id"])
+            global_params["changes"].add_object("pipeline", create_resp["pipeline_id"])
         else:
             print("Updating the DLT pipeline:", self.get_real_name(service, global_params))
             service.pipeline_update(pipeline_id, data)
@@ -131,6 +131,7 @@ class PipelineTask(BaseTask):
         notebook = Notebook(self.params["notebook"])
         remote_path = notebook.get_remote_path(service, global_params)
         pipeline_name = self.get_real_name(service, global_params)
+        # TODO: cluster
         data = {
             "name": pipeline_name,
             "storage": f"{dlt_storage_root}/{pipeline_name}",
@@ -223,8 +224,6 @@ class NotebookTask(BaseTask):
         ts = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         use_cluster_id = global_params.get("use_cluster_id")
 
-        k = ""
-        v = {}
         if not use_cluster_id:
             job_clusters: Dict[AnyStr, JobCluster] = global_params.get("job_clusters")
             if not job_clusters or not job_clusters.get("default"):

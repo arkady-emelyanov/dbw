@@ -3,10 +3,15 @@ import uuid
 import functools
 import json
 
-from dltx.task import BaseTask, PipelineTask, NotebookTask
+from dltx.task import BaseTask, NotebookTask
 from dltx.job_cluster import JobCluster
+from dltx.changes import Changes
 from dltx.service import Service
+from dltx.library import Library
+from dltx.notebook import Notebook
+from dltx.task import PipelineTask
 from dltx.file_resource import FileResource
+
 from rich import print_json
 from typing import Dict, AnyStr, Any
 
@@ -95,13 +100,32 @@ class Workflow:
     def inject_workflow_level_params(self, service: Service, global_params: Dict[AnyStr, Any]):
         workflow_params = {}
         local_params = {
+            "workflow_name": self.name,
             "use_name_prefix": self.get_real_name(service, global_params),
             "tasks": self.tasks,
             "job_clusters": self.job_clusters,
+            "changes": Changes(self.name, global_params)
         }
         workflow_params.update(global_params)
         workflow_params.update(local_params)
         return workflow_params
+
+    @inject_workflow_params
+    def delete(self, service: Service, global_params: Dict[AnyStr, Any]):
+        state_map = global_params["changes"].get_objects()
+        delete_mappings = {
+            "library": Library,
+            "notebook": Notebook,
+            "pipeline": PipelineTask,
+            "workflow": Workflow,
+            "file_resource": FileResource,
+        }
+        for k in state_map:
+            f = delete_mappings.get(k["obj_type"])
+            if not f:
+                print(f"Skipping {k}")
+            f.purge(service, global_params, k["obj_id"])
+        global_params["changes"].reset()
 
     @inject_workflow_params
     def run_sync(self, service: Service, global_params: Dict[AnyStr, Any]):
@@ -151,7 +175,7 @@ class Workflow:
         data = self.json(service, global_params)
         if not workflow_id:
             create_resp = service.jobs.create_job(**data)
-            service.changes.create("workflow", create_resp["job_id"])
+            global_params["changes"].add_object("workflow", create_resp["job_id"])
         else:
             service.jobs.reset_job(workflow_id, new_settings=data)
         print("Synchronization complete.")

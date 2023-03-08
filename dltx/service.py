@@ -2,7 +2,6 @@ import os
 import requests
 from databricks_cli.sdk.api_client import ApiClient
 from databricks_cli.sdk import JobsService, DbfsService, DeltaPipelinesService, WorkspaceService
-from dltx.changes import Changes
 
 
 class MockApiClient:
@@ -47,7 +46,6 @@ class Service:
         self.dbfs = DbfsService(self.api_client)
         self.pipelines = DeltaPipelinesService(self.api_client)
         self.workspace = WorkspaceService(self.api_client)
-        self.changes = Changes()
 
     def pipeline_create(self, data):
         # databricks cli doesn't support photon setting

@@ -61,7 +61,7 @@ class Notebook:
             )
 
         if not path_exists:
-            service.changes.create("notebook", remote_path)
+            global_params["changes"].add_object("notebook", remote_path)
         else:
             # TODO: debug skipping the event creation
             pass

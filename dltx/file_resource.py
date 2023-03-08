@@ -43,4 +43,4 @@ class FileResource:
             service.dbfs.put(remote_path, contents=content, overwrite=True)
 
         if not path_exists:
-            service.changes.create("file_resource", remote_path)
+            global_params["changes"].add_object("file_resource", remote_path)
