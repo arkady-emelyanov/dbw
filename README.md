@@ -10,7 +10,7 @@ Dbw project contains three type of objects: resources,
 tasks, and workflows.
 
 *Resource*. Arbitrary file, usually some piece of
-configuration. Resources are located in the [resources folder](./resources).
+configuration. Resources are located in the [resources folder](./files).
 (not currently implemented)
 
 *Task*. Notebook and DLT tasks are currently supported.
@@ -91,12 +91,12 @@ Consider following DLT task definition:
 ```python
 # ...
 with Workflow() as w:
-    w.dlt_task(
-        name="dlt_sample_task",
-        spark_conf={
-            "hello": "world",
-        },
-    )
+  w.pipeline_task(
+    name="dlt_sample_task",
+    spark_conf={
+      "hello": "world",
+    },
+  )
 ```
 
 Then access to  DLT task could use helpers:

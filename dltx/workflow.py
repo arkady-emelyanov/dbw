@@ -3,9 +3,10 @@ import uuid
 import functools
 import json
 
-from dltx.task import BaseTask, DltTask, NbTask
+from dltx.task import BaseTask, PipelineTask, NotebookTask
 from dltx.job_cluster import JobCluster
 from dltx.service import Service
+from dltx.file_resource import FileResource
 from rich import print_json
 from typing import Dict, AnyStr, Any
 
@@ -32,6 +33,7 @@ class Workflow:
         self.params = kwargs
         self.tasks: Dict[AnyStr, BaseTask] = {}
         self.job_clusters: Dict[AnyStr, JobCluster] = {}
+        self.resources: Dict[AnyStr, FileResource] = {}
 
     def __enter__(self):
         return self
@@ -43,13 +45,21 @@ class Workflow:
         t = JobCluster(**kwargs)
         self.job_clusters[t.name] = t
 
-    def dlt_task(self, **kwargs):
-        t = DltTask(**kwargs)
+    def pipeline_task(self, **kwargs):
+        t = PipelineTask(**kwargs)
         self.tasks[t.name] = t
 
-    def nb_task(self, **kwargs):
-        t = NbTask(**kwargs)
+    def notebook_task(self, **kwargs):
+        t = NotebookTask(**kwargs)
         self.tasks[t.name] = t
+
+    def add_files(self, list_of_files):
+        for name in list_of_files:
+            self.file(name=name)
+
+    def file(self, **kwargs):
+        t = FileResource(**kwargs)
+        self.resources[t.name] = t
 
     def get_real_name(self, service: Service, global_params: Dict[AnyStr, Any]):
         suffix = global_params.get("use_name_suffix")
@@ -83,24 +93,25 @@ class Workflow:
         return found_wfls[0]["job_id"]
 
     def inject_workflow_level_params(self, service: Service, global_params: Dict[AnyStr, Any]):
-        workflow_params = {
+        workflow_params = {}
+        local_params = {
             "use_name_prefix": self.get_real_name(service, global_params),
             "tasks": self.tasks,
             "job_clusters": self.job_clusters,
         }
         workflow_params.update(global_params)
+        workflow_params.update(local_params)
         return workflow_params
 
     @inject_workflow_params
     def run_sync(self, service: Service, global_params: Dict[AnyStr, Any]):
         pass
 
-    @inject_workflow_params
-    def run_task_sync(self, task_name, service: Service, global_params: Dict[AnyStr, Any]):
+    def get_task(self, task_name):
         for t in self.tasks:
             if self.tasks[t].name == task_name:
-                return self.tasks[t].run_sync(service, global_params)
-        raise Exception(f"Unknown task '{task_name}' in workflow '{self.get_real_name(service, global_params)}'")
+                return self.tasks[t]
+        raise Exception(f"Unknown task '{task_name}' in workflow '{self.name}'")
 
     @inject_workflow_params
     def diff(self, service: Service, global_params: Dict[AnyStr, Any]):
@@ -133,6 +144,9 @@ class Workflow:
 
         for x in self.job_clusters:
             self.job_clusters[x].synch(service, global_params)
+
+        for x in self.resources:
+            self.resources[x].synch(service, global_params)
 
         data = self.json(service, global_params)
         if not workflow_id:

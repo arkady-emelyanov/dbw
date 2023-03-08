@@ -17,7 +17,8 @@ from dltx.workflow import Workflow
 from dltx.service import Service
 from dltx.library import Library
 from dltx.notebook import Notebook
-from dltx.task import DltTask
+from dltx.task import PipelineTask
+from dltx.file_resource import FileResource
 
 
 class Project:
@@ -164,7 +165,10 @@ class Project:
 
     def run_task_sync(self, workflow_name, task_name):
         workflow = self._find_workflow(workflow_name)
-        workflow.run_task_sync(task_name, self.service, self.params)
+        task = workflow.get_task(task_name)
+
+        task_params = workflow.inject_workflow_level_params(self.service, self.params)
+        task.run_sync(self.service, task_params)
 
     def _synch_state(self, workflow_name):
         state = State(workflow_name, self.params)
@@ -176,8 +180,9 @@ class Project:
         delete_mappings = {
             "library": Library,
             "notebook": Notebook,
-            "pipeline": DltTask,
+            "pipeline": PipelineTask,
             "workflow": Workflow,
+            "file_resource": FileResource,
         }
         for k in state_map:
             f = delete_mappings.get(k)

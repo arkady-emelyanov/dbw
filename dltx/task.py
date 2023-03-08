@@ -47,7 +47,7 @@ class BaseTask:
         pass
 
 
-class DltTask(BaseTask):
+class PipelineTask(BaseTask):
 
     @staticmethod
     def purge(service: Service, global_params: Dict[AnyStr, Any], task_id):
@@ -177,6 +177,7 @@ class DltTask(BaseTask):
             "dbw.use_name_suffix": global_params.get("use_name_suffix", ""),
             "dbw.resource_storage_root": global_params.get("resource_storage_root", ""),
             "dbw.library_storage_root": global_params.get("library_storage_root", ""),
+            "dbw.files_storage_root": global_params.get("files_storage_root", ""),
         })
 
         if self.params.get("spark_conf"):
@@ -212,25 +213,36 @@ class DltTask(BaseTask):
         return data
 
 
-class NbTask(BaseTask):
+class NotebookTask(BaseTask):
 
     def synch(self, service: Service, global_params: Dict[AnyStr, Any]):
         notebook = Notebook(self.params["notebook"])
         notebook.synch(service, global_params)
 
     def run_sync(self, service: Service, global_params: Dict[AnyStr, Any]):
-        job_clusters: Dict[AnyStr, JobCluster] = global_params.get("job_clusters")
-        if not job_clusters.get("default"):
-            raise Exception("'default' cluster should be in the list of clusters")
-
         ts = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        data = {
-            "run_name": f"{self.get_real_name(service, global_params)}-{ts}",
-            "new_cluster": job_clusters["default"].json(
+        use_cluster_id = global_params.get("use_cluster_id")
+
+        k = ""
+        v = {}
+        if not use_cluster_id:
+            job_clusters: Dict[AnyStr, JobCluster] = global_params.get("job_clusters")
+            if not job_clusters or not job_clusters.get("default"):
+                raise Exception("'default' cluster should be in the list of clusters")
+
+            k = "new_cluster"
+            v = job_clusters["default"].json(
                 service,
                 global_params,
                 new_cluster_only=True
-            ),
+            )
+        else:
+            k = "existing_cluster_id"
+            v = use_cluster_id
+
+        data = {
+            "run_name": f"{self.get_real_name(service, global_params)}-{ts}",
+            f"{k}": v,
             "notebook_task": self.task_json(
                 service,
                 global_params,
@@ -280,6 +292,7 @@ class NbTask(BaseTask):
                 "dbw.use_name_suffix": global_params.get("use_name_suffix", ""),
                 "dbw.resource_storage_root": global_params.get("resource_storage_root", ""),
                 "dbw.library_storage_root": global_params.get("library_storage_root", ""),
+                "dbw.files_storage_root": global_params.get("files_storage_root", ""),
             }
         }
         spark_conf = self.params.get("spark_conf")

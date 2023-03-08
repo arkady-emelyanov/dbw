@@ -6,8 +6,8 @@ from typing import Dict, AnyStr, Any
 
 class Notebook:
 
-    def __init__(self, task_name):
-        self.task_name = task_name
+    def __init__(self, source_file):
+        self.source_file = source_file
 
     @staticmethod
     def purge(service: Service, global_params: Dict[AnyStr, Any], remote_path):
@@ -19,12 +19,12 @@ class Notebook:
 
     def get_remote_path(self, service: Service, global_params: Dict[AnyStr, Any]):
         workspace_root = global_params.get("workspace_root")
-        notebook_base = os.path.basename(self.task_name)
+        notebook_base = os.path.basename(self.source_file)
         notebook_name = os.path.splitext(notebook_base)[0]
         return f"{workspace_root}/{notebook_name}"
 
     def synch(self, service: Service, global_params: Dict[AnyStr, Any]):
-        source_file = f"./notebooks/{self.task_name}"
+        source_file = f"./notebooks/{self.source_file}"
         if not source_file.endswith(".py"):
             source_file = f"{source_file}.py"
 

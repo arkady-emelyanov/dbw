@@ -24,3 +24,10 @@ def table_name(name) -> str:
         return f"{name}_{suffix}"
     else:
         return name
+
+
+def file_path(name) -> str:
+    # TODO: add subdirectory support
+    files_storage_root = get_param("dbw.files_storage_root")
+    files_storage_root = files_storage_root.replace("dbfs:", "/dbfs")
+    return f"{files_storage_root}/{name}"

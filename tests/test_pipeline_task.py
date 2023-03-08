@@ -1,6 +1,6 @@
 import unittest
 
-from dltx.task import DltTask
+from dltx.task import PipelineTask
 from dltx.service import MockService
 
 
@@ -8,7 +8,7 @@ class TestDltTask(unittest.TestCase):
     """Task tests"""
 
     def test_task_json(self):
-        task = DltTask(name="mydlttask", notebook="/notebook.py")
+        task = PipelineTask(name="mydlttask", notebook="/notebook.py")
         service_mock = MockService()
         service_mock.api_client.set_perform_query_result({
             "statuses": [{
@@ -24,7 +24,7 @@ class TestDltTask(unittest.TestCase):
         })
 
     def test_pipeline_json(self):
-        task = DltTask(name="mydlttask", notebook="/notebook.py")
+        task = PipelineTask(name="mydlttask", notebook="/notebook.py")
         service_mock = MockService()
         service_mock.api_client.set_perform_query_result({
             "statuses": [{
@@ -57,6 +57,7 @@ class TestDltTask(unittest.TestCase):
                 "dbw.use_name_suffix": "",
                 "dbw.resource_storage_root": "",
                 "dbw.library_storage_root": "",
+                "dbw.files_storage_root": "",
             }
         })
 

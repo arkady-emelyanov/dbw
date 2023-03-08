@@ -5,8 +5,8 @@ from typing import Dict, AnyStr, Any
 
 
 class Library:
-    def __init__(self, project_full_name):
-        self.project_full_name = project_full_name
+    def __init__(self, name):
+        self.name = name
 
     @staticmethod
     def purge(service: Service, global_params: Dict[AnyStr, Any], remote_path):
@@ -18,7 +18,7 @@ class Library:
         if not storage_root:
             raise Exception("'library_storage_root' is not defined!")
 
-        remote_path = f"{storage_root}/{self.project_full_name}.tar.gz"
+        remote_path = f"{storage_root}/{self.name}.tar.gz"
         return remote_path
 
     def get_install_path(self, service: Service, global_params: Dict[AnyStr, Any]):

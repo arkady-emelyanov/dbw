@@ -5,6 +5,11 @@ with Workflow(
         schedule="@daily",
         # max_concurrent_runs=5,
 ) as w:
+    # add resources accessible in spark session
+    w.add_files([
+        "myconf.json",
+    ])
+
     # register the job cluster.
     # required section for notebook run if shared cluster id wasn't provided.
     w.job_cluster(
@@ -18,7 +23,7 @@ with Workflow(
 
     # create DLT task.
     # task name represent name of the file in ./tasks/ directory
-    w.dlt_task(
+    w.pipeline_task(
         name="dlt_task",
         notebook="dlt_notebook.py",
         spark_conf={
@@ -31,7 +36,7 @@ with Workflow(
 
     # create a Notebook task.
     # Task name represent name of the file in ./tasks/ directory
-    w.nb_task(
+    w.notebook_task(
         name="notebook_task",
         notebook="submit_notebook",
         depends_on=[{"task_key": "dlt_task"}],
