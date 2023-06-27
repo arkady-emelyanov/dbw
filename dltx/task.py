@@ -143,6 +143,7 @@ class PipelineTask(BaseTask):
                 "autoscale": {
                     "min_workers": 1,
                     "max_workers": 2,
+                    "mode": "LEGACY",
                 },
             }],
             "libraries": [{
